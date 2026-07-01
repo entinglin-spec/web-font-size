@@ -1,0 +1,964 @@
+<!doctype html>
+<html lang="zh-TW">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>手機點餐 · 語言與文字大小切換 Prototype</title>
+<style>
+  :root {
+    --primary: #58B6A8;
+    --primary-active: #4aa093;
+    --black: #000000;
+    --white: #FFFFFF;
+    --gray-1: #F5F8F9;
+    --gray-2: #E1E1E1;
+    --gray-3: #8D8C8C;
+    --secondary: #5292D9;
+
+    --text-xs: 12px;
+    --text-sm: 14px;
+    --text-md: 16px;
+    --text-lg: 18px;
+    --text-xl: 20px;
+
+    --shadow-btn: 0 1px 2px rgba(0,0,0,0.25);
+    --shadow-header: 0 1px 2px rgba(0,0,0,0.25);
+    --shadow-card: 0 1px 1px rgba(0,0,0,0.15);
+
+    --font-scale: 1;
+    --font-body: "Open Sans", "Noto Sans TC", "PingFang TC", "Hiragino Sans", "Microsoft JhengHei", -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; }
+  body {
+    font-family: var(--font-body);
+    background: #E8EAED;
+    color: var(--black);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 24px 12px;
+    overflow-x: hidden;
+  }
+
+  /* device frame — centered phone; on mobile it fills the screen */
+  .phone {
+    position: relative;
+    width: 375px;
+    height: 812px;
+    max-width: 100%;
+    background: var(--white);
+    border-radius: 40px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.18), 0 2px 6px rgba(0,0,0,0.08);
+    overflow: hidden;
+    isolation: isolate;
+  }
+  @media (max-width: 420px) {
+    body { padding: 0; background: var(--white); }
+    .phone { border-radius: 0; height: 100vh; box-shadow: none; }
+  }
+
+  .screen {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    background: #FAFAFA;
+    overflow: hidden;
+  }
+
+  /* status bar */
+  .status-bar {
+    height: 44px;
+    flex: 0 0 44px;
+    background: var(--white);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 24px 0 30px;
+    font-size: 15px; font-weight: 600;
+    color: var(--black);
+  }
+  .status-bar .icons { display: flex; align-items: center; gap: 5px; }
+  .status-bar svg { display: block; }
+
+  /* header */
+  .header {
+    height: 44px; flex: 0 0 44px;
+    background: var(--white);
+    border-bottom: 1px solid var(--gray-2);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 10px;
+  }
+  .icon-btn {
+    background: none; border: 0; padding: 10px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--black);
+    border-radius: 8px;
+    transition: background .15s;
+  }
+  .icon-btn:hover { background: rgba(0,0,0,.04); }
+  .icon-btn:active { background: rgba(0,0,0,.08); }
+
+  .lang-btn {
+    display: flex; align-items: center; gap: 5px;
+    background: none; border: 0; padding: 8px 10px;
+    cursor: pointer;
+    color: var(--black);
+    font-family: inherit;
+    border-radius: 8px;
+    transition: background .15s;
+  }
+  .lang-btn:hover { background: rgba(88,182,168,.08); }
+  .lang-btn .label {
+    font-size: calc(var(--text-md) * var(--font-scale));
+    font-weight: 400;
+    white-space: nowrap;
+  }
+
+  /* shop info block */
+  .shop-info {
+    background: var(--white);
+    border-bottom: 1px solid var(--gray-2);
+    padding: 10px 15px;
+  }
+  .shop-title {
+    font-size: calc(var(--text-md) * var(--font-scale));
+    font-weight: 700;
+    line-height: 20px;
+    display: flex; align-items: center; gap: 4px;
+    color: var(--black);
+  }
+  .shop-meta {
+    margin-top: 5px;
+    display: flex; align-items: center; gap: 5px;
+  }
+  .status-open {
+    display: inline-flex; align-items: center; gap: 4px;
+    color: var(--primary); font-weight: 700;
+    font-size: calc(var(--text-xs) * var(--font-scale));
+  }
+  .shop-hours {
+    color: var(--gray-3);
+    font-size: calc(var(--text-xs) * var(--font-scale));
+    line-height: 12px;
+  }
+
+  .service-row {
+    background: var(--white);
+    border-bottom: 1px solid var(--gray-2);
+    padding: 10px 15px;
+    display: flex; align-items: center; gap: 5px;
+    font-size: calc(var(--text-sm) * var(--font-scale));
+    font-weight: 700;
+  }
+
+  .discount-row {
+    background: var(--white);
+    border-bottom: 1px solid var(--gray-2);
+    padding: 10px 15px;
+  }
+  .discount-input {
+    border: 1px solid var(--gray-3);
+    border-radius: 10px;
+    padding: 5px 10px;
+    display: flex; align-items: center; gap: 10px;
+    font-size: calc(var(--text-sm) * var(--font-scale));
+    color: var(--black);
+    line-height: 20px;
+  }
+  .discount-input .placeholder { flex: 1; }
+
+  /* menu tabs */
+  .catalog {
+    background: var(--white);
+    border-bottom: 1px solid var(--gray-2);
+    box-shadow: var(--shadow-card);
+    padding: 0 calc(20px * var(--font-scale));
+    display: flex;
+    gap: calc(20px * var(--font-scale));
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .catalog::-webkit-scrollbar { display: none; }
+  .catalog-item {
+    background: none; border: 0;
+    padding: calc(15px * var(--font-scale)) 0;
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    gap: 6px;
+    font-size: calc(var(--text-lg) * var(--font-scale));
+    color: var(--black);
+    font-family: inherit;
+    cursor: pointer;
+    white-space: nowrap;
+    position: relative;
+    transition: color .15s;
+  }
+  .catalog-item.active {
+    color: var(--primary);
+    font-weight: 700;
+  }
+  .catalog-item.active::after {
+    content: "";
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    height: 3px;
+    background: var(--primary);
+  }
+
+  /* menu type */
+  .menu-scroll {
+    flex: 1;
+    overflow-y: auto;
+    background: #F1F2F4;
+    scroll-behavior: smooth;
+  }
+  .menu-scroll::-webkit-scrollbar { width: 0; }
+  /* each category section carries its own 20px padding, matching the Figma Type frame spec */
+  .cat-section {
+    scroll-margin-top: 0;
+    position: relative;
+    background: var(--white);
+    padding: 20px;
+    box-shadow: var(--shadow-card);
+  }
+  .cat-section + .cat-section {
+    margin-top: 5px;
+  }
+  .type-header {
+    padding-bottom: 5px;
+    border-bottom: 1px solid var(--black);
+    font-weight: 700;
+    font-size: calc(20px * var(--font-scale));
+    line-height: 1.1;
+  }
+  .menu-item {
+    padding: 8px 0;
+    border-bottom: 0.5px solid var(--black);
+    display: flex; align-items: center; gap: 10px;
+  }
+  .cat-section .menu-item:last-child { border-bottom: 0; }
+  .menu-item .content { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+  .menu-item .name {
+    font-size: calc(var(--text-md) * var(--font-scale));
+    line-height: 1.3;
+  }
+  .menu-item .price {
+    font-size: calc(var(--text-sm) * var(--font-scale));
+    font-weight: 700;
+    line-height: 1.3;
+  }
+  .menu-item .desc {
+    font-size: calc(var(--text-xs) * var(--font-scale));
+    color: var(--gray-3);
+    line-height: 1.4;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .menu-item .image {
+    width: 96px; height: 72px;
+    border-radius: 8px;
+    background: #ccc center/cover no-repeat;
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: inset 0 -8px 16px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06);
+    overflow: hidden;
+  }
+  .food-emoji {
+    font-size: 40px;
+    line-height: 1;
+    filter: drop-shadow(0 2px 3px rgba(0,0,0,0.2));
+    transform: rotate(-6deg);
+  }
+
+  /* Backdrop */
+  .backdrop {
+    position: absolute; inset: 0;
+    background: rgba(0,0,0,0.45);
+    opacity: 0; pointer-events: none;
+    transition: opacity .2s ease;
+    z-index: 20;
+  }
+  .backdrop.show { opacity: 1; pointer-events: auto; }
+
+  /* Dialog — matches Figma spec: 18px inset from phone edges, full-height */
+  .dialog {
+    position: absolute;
+    top: 18px; left: 18px; right: 18px; bottom: 18px;
+    background: var(--white);
+    border-radius: 10px;
+    z-index: 30;
+    display: flex; flex-direction: column;
+    transform: translateY(-12px) scale(.97);
+    opacity: 0;
+    pointer-events: none;
+    transition: transform .22s ease, opacity .22s ease;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+  }
+  .dialog.show {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .dialog-header {
+    height: 65px;
+    background: var(--white);
+    box-shadow: var(--shadow-header);
+    padding: 10px;
+    display: flex; align-items: center; justify-content: flex-end;
+    gap: 10px;
+    border-radius: 5px 5px 0 0;
+    flex-shrink: 0;
+  }
+  .dialog-title {
+    flex: 1;
+    font-weight: 700;
+    font-size: calc(var(--text-lg) * var(--font-scale));
+    line-height: 25px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .close-btn {
+    width: 45px; height: 45px;
+    background: none;
+    border: 0;
+    padding: 0;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 8px;
+    transition: background .15s;
+  }
+  .close-btn:hover { background: rgba(0,0,0,.05); }
+  .close-btn svg { width: 22px; height: 22px; }
+
+  .dialog-body {
+    padding: 20px;
+    display: flex; flex-direction: column;
+    gap: 20px;
+    position: relative;
+  }
+  .field {
+    display: flex; flex-direction: column;
+    gap: 10px;
+    position: relative;
+  }
+  .field-label {
+    font-size: calc(var(--text-md) * var(--font-scale));
+    color: var(--black);
+    line-height: 20px;
+  }
+
+  /* Language selector */
+  .lang-select {
+    height: 44px;
+    background: var(--white);
+    border: 1px solid var(--gray-3);
+    border-radius: 10px;
+    padding: 11px 15px;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 10px;
+    cursor: pointer;
+    font-family: inherit;
+    color: var(--black);
+    width: 100%;
+    transition: border-color .15s;
+  }
+  .lang-select:hover, .lang-select.open { border-color: var(--primary); }
+  .lang-select .value {
+    flex: 1; text-align: left;
+    font-size: calc(var(--text-md) * var(--font-scale));
+    opacity: .87;
+  }
+  .lang-select .chevron {
+    transition: transform .2s;
+    flex-shrink: 0;
+  }
+  .lang-select.open .chevron { transform: rotate(180deg); }
+
+  .lang-menu {
+    position: absolute;
+    left: 0; right: 0;
+    top: calc(100% + 6px);
+    background: var(--white);
+    border: 1px solid var(--gray-3);
+    border-radius: 10px;
+    padding: 10px 0;
+    display: none;
+    flex-direction: column;
+    z-index: 5;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  }
+  .lang-menu.show { display: flex; }
+  .lang-option {
+    height: 45px;
+    padding: 10px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: calc(var(--text-md) * var(--font-scale));
+    color: var(--black);
+    background: none;
+    border: 0;
+    transition: background .12s;
+  }
+  .lang-option:hover { background: rgba(88,182,168,0.08); }
+  .lang-option.selected {
+    background: var(--primary);
+    color: var(--white);
+    font-weight: 700;
+  }
+
+  /* font size buttons */
+  .size-buttons {
+    display: flex; gap: 10px;
+  }
+  .size-btn {
+    flex: 1;
+    padding: 20px;
+    background: var(--white);
+    border: 0;
+    border-radius: 10px;
+    box-shadow: var(--shadow-btn);
+    cursor: pointer;
+    font-family: inherit;
+    color: var(--black);
+    display: flex; align-items: center; justify-content: center;
+    gap: 8px;
+    transition: transform .12s, box-shadow .12s, background .2s, color .2s;
+    /* keep button label consistent, not affected by scale */
+    font-size: 16px;
+  }
+  .size-btn:hover { transform: translateY(-1px); }
+  .size-btn:active { transform: translateY(0); }
+  .size-btn.selected {
+    background: var(--primary);
+    color: var(--white);
+    font-weight: 700;
+  }
+  .size-btn .glyph { font-weight: 700; }
+  .size-btn.selected .glyph { font-weight: 700; }
+  /* label under glyph shows the "S / M / L" size preview */
+  .size-btn .preview {
+    font-size: 11px;
+    opacity: .6;
+  }
+  .size-btn.selected .preview { opacity: .85; }
+
+  /* toast */
+  .toast {
+    position: absolute;
+    left: 50%;
+    bottom: 32px;
+    transform: translate(-50%, 12px);
+    background: rgba(30,30,30,0.92);
+    color: var(--white);
+    padding: 10px 16px;
+    border-radius: 999px;
+    font-size: 13px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .2s, transform .2s;
+    z-index: 40;
+    white-space: nowrap;
+  }
+  .toast.show {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+
+  /* focus rings for keyboard */
+  button:focus-visible, .lang-select:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+  }
+</style>
+</head>
+<body>
+
+<div class="phone" id="phone">
+    <div class="screen">
+
+      <!-- Status Bar (iPhone) -->
+      <div class="status-bar" aria-hidden="true">
+        <span>9:41</span>
+        <span class="icons">
+          <!-- signal -->
+          <svg width="18" height="10" viewBox="0 0 18 10" fill="currentColor"><rect x="0" y="6" width="3" height="4" rx="0.5"/><rect x="5" y="4" width="3" height="6" rx="0.5"/><rect x="10" y="2" width="3" height="8" rx="0.5"/><rect x="15" y="0" width="3" height="10" rx="0.5"/></svg>
+          <!-- wifi -->
+          <svg width="16" height="11" viewBox="0 0 16 11" fill="currentColor"><path d="M8 11l2.5-3a3 3 0 00-5 0L8 11zM3 6a7 7 0 0110 0l-1.4 1.4a5 5 0 00-7.2 0L3 6zM0 3a11 11 0 0116 0l-1.4 1.4a9 9 0 00-13.2 0L0 3z"/></svg>
+          <!-- battery -->
+          <svg width="26" height="12" viewBox="0 0 26 12" fill="none"><rect x="0.5" y="0.5" width="22" height="11" rx="2.5" stroke="currentColor"/><rect x="2" y="2" width="19" height="8" rx="1.5" fill="currentColor"/><rect x="23.5" y="4" width="2" height="4" rx="1" fill="currentColor"/></svg>
+        </span>
+      </div>
+
+      <!-- Header -->
+      <div class="header">
+        <button class="icon-btn" aria-label="menu" id="hamburger">
+          <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <line x1="3" y1="6" x2="19" y2="6"/>
+            <line x1="3" y1="11" x2="19" y2="11"/>
+            <line x1="3" y1="16" x2="19" y2="16"/>
+          </svg>
+        </button>
+        <button class="lang-btn" id="openDialog" aria-label="open language & font size settings">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6">
+            <circle cx="10" cy="10" r="8"/>
+            <ellipse cx="10" cy="10" rx="4" ry="8"/>
+            <line x1="2" y1="10" x2="18" y2="10"/>
+          </svg>
+          <span class="label" data-i18n="settings.title">語言與文字大小</span>
+          <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="6 8 10 12 14 8"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Shop info -->
+      <div class="shop-info">
+        <div class="shop-title">
+          <span data-i18n="shop.name">電小二智慧點餐汐止店</span>
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="var(--secondary)" stroke-width="1.5">
+            <circle cx="8" cy="8" r="6.5"/>
+            <line x1="8" y1="5" x2="8" y2="9"/>
+            <circle cx="8" cy="11.5" r="0.8" fill="var(--secondary)" stroke="none"/>
+          </svg>
+        </div>
+        <div class="shop-meta">
+          <span class="status-open">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6.5"/><polyline points="8 4.5 8 8 10.5 9.5"/></svg>
+            <span data-i18n="shop.open">營業中</span>
+          </span>
+          <span class="shop-hours">08:00–17:00</span>
+        </div>
+      </div>
+
+      <!-- Service info -->
+      <div class="service-row">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6">
+          <path d="M3 8h14l-1.2 8.4a2 2 0 01-2 1.6H6.2a2 2 0 01-2-1.6L3 8z"/>
+          <path d="M6 8a4 4 0 018 0"/>
+        </svg>
+        <span data-i18n="service.takeout">外帶</span>
+      </div>
+
+      <!-- Discount input -->
+      <div class="discount-row">
+        <div class="discount-input">
+          <span class="placeholder" data-i18n="discount.placeholder">使用優惠/點數</span>
+          <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 8 10 12 14 8"/></svg>
+        </div>
+      </div>
+
+      <!-- Catalog tabs -->
+      <div class="catalog" id="catalog">
+        <button class="catalog-item active" data-cat="rice" data-i18n="cat.rice">招牌飯類</button>
+        <button class="catalog-item" data-cat="soup" data-i18n="cat.soup">湯品</button>
+        <button class="catalog-item" data-cat="side" data-i18n="cat.side">小菜</button>
+        <button class="catalog-item" data-cat="egg" data-i18n="cat.egg">蛋料理</button>
+        <button class="catalog-item" data-cat="veg" data-i18n="cat.veg">燙青菜</button>
+        <button class="catalog-item" data-cat="drink" data-i18n="cat.drink">飲料</button>
+      </div>
+
+      <!-- Menu list — all categories rendered as continuous sections -->
+      <div class="menu-scroll" id="menuScroll"></div>
+
+      <!-- Backdrop -->
+      <div class="backdrop" id="backdrop"></div>
+
+      <!-- Dialog -->
+      <div class="dialog" id="dialog" role="dialog" aria-modal="true" aria-labelledby="dialogTitle">
+        <div class="dialog-header">
+          <div class="dialog-title" id="dialogTitle" data-i18n="settings.title">語言與文字大小</div>
+          <button class="close-btn" id="closeDialog" aria-label="close">
+            <svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <line x1="5" y1="5" x2="17" y2="17"/>
+              <line x1="17" y1="5" x2="5" y2="17"/>
+            </svg>
+          </button>
+        </div>
+        <div class="dialog-body">
+          <!-- Language field -->
+          <div class="field">
+            <label class="field-label" data-i18n="settings.language">語言</label>
+            <button class="lang-select" id="langSelect" aria-haspopup="listbox" aria-expanded="false">
+              <span class="value" id="langValue">繁體中文</span>
+              <svg class="chevron" width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 8 10 12 14 8"/></svg>
+            </button>
+            <div class="lang-menu" id="langMenu" role="listbox">
+              <button class="lang-option" data-lang="zh-TW" role="option">繁體中文</button>
+              <button class="lang-option" data-lang="en" role="option">English</button>
+              <button class="lang-option" data-lang="ja" role="option">日本語</button>
+            </div>
+          </div>
+          <!-- Font size field -->
+          <div class="field">
+            <label class="field-label" data-i18n="settings.fontSize">文字大小</label>
+            <div class="size-buttons" id="sizeButtons">
+              <button class="size-btn" data-size="S">
+                <span class="glyph" data-i18n="size.small">小</span>
+              </button>
+              <button class="size-btn" data-size="M">
+                <span class="glyph" data-i18n="size.medium">中</span>
+              </button>
+              <button class="size-btn" data-size="L">
+                <span class="glyph" data-i18n="size.large">大</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="toast" id="toast"></div>
+    </div>
+  </div>
+
+
+
+<script>
+  // ============ i18n ============
+  const I18N = {
+    'zh-TW': {
+      html: 'zh-TW',
+      'settings.title': '語言與文字大小',
+      'settings.language': '語言',
+      'settings.fontSize': '文字大小',
+      'size.small': '小',
+      'size.medium': '中',
+      'size.large': '大',
+      'shop.name': '阿嬤古早味滷肉飯 汐止店',
+      'shop.open': '營業中',
+      'service.takeout': '外帶',
+      'discount.placeholder': '使用優惠/點數',
+      'cat.rice': '招牌飯類',
+      'cat.soup': '湯品',
+      'cat.side': '小菜',
+      'cat.egg': '蛋料理',
+      'cat.veg': '燙青菜',
+      'cat.drink': '飲料',
+      'toast.saved': '已套用設定',
+      'i.lurou.n': '招牌滷肉飯',       'i.lurou.d': '精選豬五花慢燉三小時，油亮鹹香，淋在白飯上',
+      'i.chicken.n': '雞肉飯',         'i.chicken.d': '手撕嫩雞絲配香蔥油，鹹香順口',
+      'i.paigu.n': '排骨飯',           'i.paigu.d': '現炸酥皮排骨，配酸菜、滷蛋、時蔬',
+      'i.kongrou.n': '焢肉飯',         'i.kongrou.d': '慢滷三層肉六小時，入口即化',
+      'i.bento.n': '古早味便當',       'i.bento.d': '招牌滷肉飯配三樣配菜，家常好味道',
+      'i.xianggu.n': '香菇雞湯',       'i.xianggu.d': '土雞熬煮六小時，湯頭清甜',
+      'i.gele.n': '蛤蜊湯',            'i.gele.d': '新鮮活蛤蜊，薑絲提味，湯清味鮮',
+      'i.zhuxue.n': '豬血湯',          'i.zhuxue.d': '嫩豬血配韭菜、酸菜，暖胃暖心',
+      'i.dofu.n': '滷豆腐',            'i.dofu.d': '入味的滷汁豆腐，一次可以來兩塊',
+      'i.haidai.n': '滷海帶',          'i.haidai.d': '厚實海帶結，滷汁滲透每一絲',
+      'i.doufugan.n': '滷豆干',        'i.doufugan.d': '香Q豆干切片，鹹香開胃',
+      'i.ludan.n': '滷蛋',             'i.ludan.d': '完美滲透的滷汁蛋黃',
+      'i.huangjin.n': '黃金半熟蛋',    'i.huangjin.d': '軟嫩流心蛋黃，鋪在飯上絕配',
+      'i.kongxin.n': '燙空心菜',       'i.kongxin.d': '現燙翠綠空心菜，淋醬油膏',
+      'i.baicai.n': '燙高麗菜',        'i.baicai.d': '清甜高麗菜，古法蒜香拌炒',
+      'i.honglvcha.n': '古早味紅茶',   'i.honglvcha.d': '大鍋現煮回甘紅茶，冰塊爽口',
+      'i.dongua.n': '冬瓜茶',          'i.dongua.d': '古法熬煮冬瓜露，清爽解膩',
+      'i.maicha.n': '麥茶',            'i.maicha.d': '香濃麥香茶，無糖也順口',
+    },
+    'en': {
+      html: 'en',
+      'settings.title': 'Language & Font Size',
+      'settings.language': 'Language',
+      'settings.fontSize': 'Font Size',
+      'size.small': 'S',
+      'size.medium': 'M',
+      'size.large': 'L',
+      'shop.name': "A-Ma's Old-Style Braised Pork Rice — Xizhi",
+      'shop.open': 'Open',
+      'service.takeout': 'Take-out',
+      'discount.placeholder': 'Apply coupon / points',
+      'cat.rice': 'Signature Rice',
+      'cat.soup': 'Soups',
+      'cat.side': 'Side Dishes',
+      'cat.egg': 'Eggs',
+      'cat.veg': 'Blanched Veg',
+      'cat.drink': 'Drinks',
+      'toast.saved': 'Settings applied',
+      'i.lurou.n': 'Signature Braised Pork Rice',  'i.lurou.d': 'Pork belly slow-braised for 3h, glossy and savoury, served over rice',
+      'i.chicken.n': 'Chicken Rice',               'i.chicken.d': 'Hand-shredded chicken with scallion oil, fragrant and comforting',
+      'i.paigu.n': 'Fried Pork Chop Rice',         'i.paigu.d': 'Crispy pork chop with pickled greens, braised egg and seasonal veg',
+      'i.kongrou.n': 'Braised Pork Belly Rice',    'i.kongrou.d': 'Three-layer pork belly braised 6h — melts in your mouth',
+      'i.bento.n': 'Old-Style Bento',              'i.bento.d': 'Signature braised pork rice with three sides — a homely classic',
+      'i.xianggu.n': 'Mushroom Chicken Soup',      'i.xianggu.d': 'Free-range chicken simmered 6h — clear, sweet broth',
+      'i.gele.n': 'Clam Soup',                     'i.gele.d': 'Live clams with julienned ginger, light and briny',
+      'i.zhuxue.n': 'Pork Blood Soup',             'i.zhuxue.d': 'Tender pork blood with chives and pickled greens — warming',
+      'i.dofu.n': 'Braised Tofu',                  'i.dofu.d': 'Silken tofu soaked in signature braising liquid',
+      'i.haidai.n': 'Braised Kelp',                'i.haidai.d': 'Thick kelp knots, braising sauce soaked through every strand',
+      'i.doufugan.n': 'Braised Dried Tofu',        'i.doufugan.d': 'Chewy dried tofu slices, savoury and appetising',
+      'i.ludan.n': 'Braised Egg',                  'i.ludan.d': 'Perfectly infused yolk, deep amber from the braise',
+      'i.huangjin.n': 'Golden Soft-Boiled Egg',    'i.huangjin.d': 'Molten yolk over rice — the perfect topping',
+      'i.kongxin.n': 'Water Spinach',              'i.kongxin.d': 'Freshly blanched, drizzled with sweet soy',
+      'i.baicai.n': 'Cabbage',                     'i.baicai.d': 'Sweet cabbage stir-fried with garlic, old-school style',
+      'i.honglvcha.n': 'Old-Style Black Tea',      'i.honglvcha.d': 'Big-pot brewed black tea with a mellow aftertaste, served iced',
+      'i.dongua.n': 'Winter Melon Tea',            'i.dongua.d': 'Slow-simmered winter melon syrup — refreshing and clean',
+      'i.maicha.n': 'Barley Tea',                  'i.maicha.d': 'Roasted barley tea, smooth even without sugar',
+    },
+    'ja': {
+      html: 'ja',
+      'settings.title': '言語と文字サイズ',
+      'settings.language': '言語',
+      'settings.fontSize': '文字サイズ',
+      'size.small': '小',
+      'size.medium': '中',
+      'size.large': '大',
+      'shop.name': '阿嬤の懐かしい滷肉飯 汐止店',
+      'shop.open': '営業中',
+      'service.takeout': 'テイクアウト',
+      'discount.placeholder': 'クーポン／ポイントを利用',
+      'cat.rice': '看板ご飯',
+      'cat.soup': 'スープ',
+      'cat.side': 'お惣菜',
+      'cat.egg': '卵料理',
+      'cat.veg': '温野菜',
+      'cat.drink': 'ドリンク',
+      'toast.saved': '設定を適用しました',
+      'i.lurou.n': '看板 滷肉飯',       'i.lurou.d': '厳選豚バラを3時間じっくり煮込み、艶やかで香ばしい',
+      'i.chicken.n': '鶏肉飯',          'i.chicken.d': '手ほぐし鶏肉にネギ油をかけて、優しい味わい',
+      'i.paigu.n': '排骨飯',            'i.paigu.d': 'サクサク揚げポーク、高菜漬け・煮玉子・季節野菜添え',
+      'i.kongrou.n': '焢肉飯',          'i.kongrou.d': '三枚肉を6時間煮込み、口の中でとろける',
+      'i.bento.n': '懐かしのお弁当',    'i.bento.d': '看板の滷肉飯に3種のお惣菜。素朴で温かい味',
+      'i.xianggu.n': '椎茸鶏スープ',    'i.xianggu.d': '地鶏を6時間煮出した、透き通る旨味',
+      'i.gele.n': 'あさりスープ',       'i.gele.d': '活あさりに生姜の千切り、澄んだ潮の香り',
+      'i.zhuxue.n': '豚血スープ',       'i.zhuxue.d': 'やわらか豚血にニラと高菜。体が温まる一杯',
+      'i.dofu.n': '滷豆腐',             'i.dofu.d': '秘伝のタレが染み込んだ絹ごし豆腐',
+      'i.haidai.n': '滷海帯',           'i.haidai.d': '厚みのある結び昆布、タレが芯まで染みる',
+      'i.doufugan.n': '滷豆干',         'i.doufugan.d': 'コリコリの豆干スライス、ご飯が進む',
+      'i.ludan.n': '滷玉子',            'i.ludan.d': '黄身までタレが染みた、こっくり玉子',
+      'i.huangjin.n': '黄金の半熟玉子', 'i.huangjin.d': 'とろける黄身をご飯にかけて絶品',
+      'i.kongxin.n': '空心菜のおひたし','i.kongxin.d': '茹でたての青々とした空心菜、甘醤油で',
+      'i.baicai.n': 'キャベツのおひたし','i.baicai.d': '甘いキャベツをガーリック風味で、昔ながらの味',
+      'i.honglvcha.n': '古早味 紅茶',   'i.honglvcha.d': '大鍋で煮出した後味まろやかな紅茶。氷でさっぱり',
+      'i.dongua.n': '冬瓜茶',           'i.dongua.d': '冬瓜シロップをじっくり煮出した、爽やかな一杯',
+      'i.maicha.n': '麦茶',             'i.maicha.d': '香ばしい麦茶、無糖でもすっきり飲みやすい',
+    }
+  };
+
+  // ============ Menu data ============
+  const MENU = [
+    { key: 'lurou',    cat: 'rice',  price: 60,  emoji: '🍚', bg: 'linear-gradient(135deg, #F0C88E, #B57438)' },
+    { key: 'chicken',  cat: 'rice',  price: 65,  emoji: '🍗', bg: 'linear-gradient(135deg, #FBE29E, #D9A660)' },
+    { key: 'paigu',    cat: 'rice',  price: 95,  emoji: '🍖', bg: 'linear-gradient(135deg, #E8B76F, #A55E22)' },
+    { key: 'kongrou',  cat: 'rice',  price: 85,  emoji: '🥩', bg: 'linear-gradient(135deg, #E8A98E, #8F4A2E)' },
+    { key: 'bento',    cat: 'rice',  price: 110, emoji: '🍱', bg: 'linear-gradient(135deg, #FBD2A5, #B8763B)' },
+    { key: 'xianggu',  cat: 'soup',  price: 60,  emoji: '🍲', bg: 'linear-gradient(135deg, #E5CE99, #987245)' },
+    { key: 'gele',     cat: 'soup',  price: 55,  emoji: '🥣', bg: 'linear-gradient(135deg, #C7D9E4, #6B92B4)' },
+    { key: 'zhuxue',   cat: 'soup',  price: 40,  emoji: '🍜', bg: 'linear-gradient(135deg, #E4A28C, #8B3A2A)' },
+    { key: 'dofu',     cat: 'side',  price: 20,  emoji: '🧈', bg: 'linear-gradient(135deg, #F2E1B8, #B08A4E)' },
+    { key: 'haidai',   cat: 'side',  price: 25,  emoji: '🌊', bg: 'linear-gradient(135deg, #7A9E88, #3B5E4A)' },
+    { key: 'doufugan', cat: 'side',  price: 20,  emoji: '🟫', bg: 'linear-gradient(135deg, #C9945F, #6B4020)' },
+    { key: 'ludan',    cat: 'egg',   price: 15,  emoji: '🥚', bg: 'linear-gradient(135deg, #E8C89A, #A87342)' },
+    { key: 'huangjin', cat: 'egg',   price: 20,  emoji: '🍳', bg: 'linear-gradient(135deg, #FBE7A8, #E39A2D)' },
+    { key: 'kongxin',  cat: 'veg',   price: 35,  emoji: '🥬', bg: 'linear-gradient(135deg, #B2D08A, #4E7A2E)' },
+    { key: 'baicai',   cat: 'veg',   price: 35,  emoji: '🥗', bg: 'linear-gradient(135deg, #C9DFA5, #5F8B3A)' },
+    { key: 'honglvcha',cat: 'drink', price: 20,  emoji: '🥤', bg: 'linear-gradient(135deg, #C99B6A, #6C3A1C)' },
+    { key: 'dongua',   cat: 'drink', price: 25,  emoji: '🍵', bg: 'linear-gradient(135deg, #D9BF89, #82602B)' },
+    { key: 'maicha',   cat: 'drink', price: 25,  emoji: '🧋', bg: 'linear-gradient(135deg, #C9A57E, #7B5432)' },
+  ];
+
+  const FONT_SCALE = { S: 1.0, M: 1.15, L: 1.32 };
+  const LANG_LABEL = { 'zh-TW': '繁體中文', 'en': 'English', 'ja': '日本語' };
+
+  // ============ State ============
+  let state = {
+    lang: 'zh-TW',
+    size: 'S',
+    dialogOpen: false,
+    langMenuOpen: false,
+  };
+
+  // ============ Render helpers ============
+  function applyLang(lang) {
+    const dict = I18N[lang] || I18N['zh-TW'];
+    document.documentElement.lang = dict.html;
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+      const key = el.getAttribute('data-i18n');
+      if (dict[key] != null) el.textContent = dict[key];
+    });
+    document.getElementById('langValue').textContent = LANG_LABEL[lang];
+
+    // language options: mark selected
+    document.querySelectorAll('.lang-option').forEach(btn => {
+      btn.classList.toggle('selected', btn.getAttribute('data-lang') === lang);
+    });
+  }
+
+  function applySize(size) {
+    document.documentElement.style.setProperty('--font-scale', FONT_SCALE[size]);
+    document.querySelectorAll('.size-btn').forEach(btn => {
+      btn.classList.toggle('selected', btn.getAttribute('data-size') === size);
+    });
+  }
+
+  // categories rendered in tab order
+  const CAT_ORDER = ['rice', 'soup', 'side', 'egg', 'veg', 'drink'];
+
+  function renderMenuList() {
+    const dict = I18N[state.lang];
+    const wrap = document.getElementById('menuScroll');
+    const currencyPrefix = state.lang === 'ja' ? 'NT$' : '$';
+    wrap.innerHTML = CAT_ORDER.map(cat => {
+      const items = MENU.filter(i => i.cat === cat);
+      if (!items.length) return '';
+      return `
+        <section class="cat-section" data-cat="${cat}" id="section-${cat}">
+          <div class="type-header">${dict['cat.' + cat]}</div>
+          ${items.map(item => `
+            <div class="menu-item">
+              <div class="content">
+                <div class="name">${dict['i.' + item.key + '.n']}</div>
+                <div class="price">${currencyPrefix}${item.price}</div>
+                <div class="desc">${dict['i.' + item.key + '.d']}</div>
+              </div>
+              <div class="image" style="background:${item.bg}">
+                <span class="food-emoji">${item.emoji}</span>
+              </div>
+            </div>
+          `).join('')}
+        </section>
+      `;
+    }).join('');
+  }
+
+  // ============ Dialog / dropdown ============
+  const dialog = document.getElementById('dialog');
+  const backdrop = document.getElementById('backdrop');
+  const langMenu = document.getElementById('langMenu');
+  const langSelect = document.getElementById('langSelect');
+
+  function openDialog() {
+    state.dialogOpen = true;
+    dialog.classList.add('show');
+    backdrop.classList.add('show');
+  }
+  function closeDialog() {
+    state.dialogOpen = false;
+    state.langMenuOpen = false;
+    dialog.classList.remove('show');
+    backdrop.classList.remove('show');
+    langMenu.classList.remove('show');
+    langSelect.classList.remove('open');
+    langSelect.setAttribute('aria-expanded', 'false');
+  }
+  function toggleLangMenu(force) {
+    const willOpen = force != null ? force : !state.langMenuOpen;
+    state.langMenuOpen = willOpen;
+    langMenu.classList.toggle('show', willOpen);
+    langSelect.classList.toggle('open', willOpen);
+    langSelect.setAttribute('aria-expanded', String(willOpen));
+  }
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(t._timer);
+    t._timer = setTimeout(() => t.classList.remove('show'), 1400);
+  }
+
+  // ============ Event wiring ============
+  document.getElementById('openDialog').addEventListener('click', openDialog);
+  document.getElementById('closeDialog').addEventListener('click', closeDialog);
+  backdrop.addEventListener('click', closeDialog);
+
+  langSelect.addEventListener('click', () => toggleLangMenu());
+
+  document.querySelectorAll('.lang-option').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const lang = btn.getAttribute('data-lang');
+      state.lang = lang;
+      applyLang(lang);
+      renderMenuList();
+      toggleLangMenu(false);
+    });
+  });
+
+  document.querySelectorAll('.size-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const size = btn.getAttribute('data-size');
+      state.size = size;
+      applySize(size);
+    });
+  });
+
+  // Category tabs — jump to the corresponding section.
+  // CSS `scroll-behavior: smooth` on the container animates it on real browsers.
+  let ignoreScrollSpyUntil = 0;
+  document.querySelectorAll('.catalog-item').forEach(tab => {
+    tab.addEventListener('click', () => {
+      const cat = tab.getAttribute('data-cat');
+      if (!cat) return;
+      const section = document.getElementById('section-' + cat);
+      const scroll = document.getElementById('menuScroll');
+      if (!section || !scroll) return;
+      setActiveTab(cat);
+      ignoreScrollSpyUntil = Date.now() + 300;
+      const target = section.getBoundingClientRect().top - scroll.getBoundingClientRect().top + scroll.scrollTop;
+      // Explicit 'instant' overrides CSS `scroll-behavior: smooth` — reliable everywhere.
+      // User's touch/wheel scroll still gets the smooth momentum from the CSS rule.
+      scroll.scrollTo({ top: target, behavior: 'instant' });
+    });
+  });
+
+  function setActiveTab(cat) {
+    document.querySelectorAll('.catalog-item').forEach(t => {
+      const isActive = t.getAttribute('data-cat') === cat;
+      t.classList.toggle('active', isActive);
+      if (isActive) {
+        // horizontally scroll the tab into view
+        t.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+      }
+    });
+  }
+
+  // Scroll-spy — update active tab based on which section is at the top of the menu
+  const menuScrollEl = document.getElementById('menuScroll');
+  menuScrollEl.addEventListener('scroll', () => {
+    if (Date.now() < ignoreScrollSpyUntil) return;
+    let currentCat;
+    // when scrolled all the way to the bottom, the last section is what the user is looking at
+    // (its top can't reach the container's top because there isn't enough content below it)
+    const atBottom = menuScrollEl.scrollTop + menuScrollEl.clientHeight >= menuScrollEl.scrollHeight - 2;
+    if (atBottom) {
+      currentCat = CAT_ORDER[CAT_ORDER.length - 1];
+    } else {
+      const containerRect = menuScrollEl.getBoundingClientRect();
+      const anchor = containerRect.top + 30; // trigger 30px below the top
+      currentCat = CAT_ORDER[0];
+      for (const cat of CAT_ORDER) {
+        const section = document.getElementById('section-' + cat);
+        if (!section) continue;
+        if (section.getBoundingClientRect().top <= anchor) currentCat = cat;
+        else break;
+      }
+    }
+    // only update if changed
+    const currentActive = document.querySelector('.catalog-item.active');
+    if (!currentActive || currentActive.getAttribute('data-cat') !== currentCat) {
+      setActiveTab(currentCat);
+    }
+  }, { passive: true });
+
+  // Keyboard: Escape closes
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      if (state.langMenuOpen) toggleLangMenu(false);
+      else if (state.dialogOpen) closeDialog();
+    }
+  });
+
+  // Close language menu when clicking outside inside dialog
+  dialog.addEventListener('click', (e) => {
+    if (state.langMenuOpen && !langSelect.contains(e.target) && !langMenu.contains(e.target)) {
+      toggleLangMenu(false);
+    }
+  });
+
+  // Initial render
+  applyLang(state.lang);
+  applySize(state.size);
+  renderMenuList();
+</script>
+
+
+
+</body>
+</html>
