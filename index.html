@@ -56,9 +56,16 @@
     overflow: hidden;
     isolation: isolate;
   }
-  @media (max-width: 420px) {
+  /* on any touch device OR viewport ≤ 640px, phone fills the screen edge-to-edge */
+  @media (max-width: 640px), (hover: none) and (pointer: coarse) {
     body { padding: 0; background: var(--white); }
-    .phone { border-radius: 0; height: 100vh; box-shadow: none; }
+    .phone {
+      width: 100%;
+      border-radius: 0;
+      height: 100vh;
+      height: 100dvh; /* dynamic viewport height — avoids gap from browser toolbars */
+      box-shadow: none;
+    }
   }
 
   .screen {
