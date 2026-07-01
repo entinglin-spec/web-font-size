@@ -25,8 +25,14 @@
     --shadow-header: 0 1px 2px rgba(0,0,0,0.25);
     --shadow-card: 0 1px 1px rgba(0,0,0,0.15);
 
-    --font-scale: 1;
     --font-body: "Open Sans", "Noto Sans TC", "PingFang TC", "Hiragino Sans", "Microsoft JhengHei", -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+  /* Font-size levels — S = default (12/14/16/18/20); each higher level = +2px per token */
+  :root.size-M {
+    --text-xs: 14px; --text-sm: 16px; --text-md: 18px; --text-lg: 20px; --text-xl: 22px;
+  }
+  :root.size-L {
+    --text-xs: 16px; --text-sm: 18px; --text-md: 20px; --text-lg: 22px; --text-xl: 24px;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
@@ -112,7 +118,7 @@
   }
   .lang-btn:hover { background: rgba(88,182,168,.08); }
   .lang-btn .label {
-    font-size: calc(var(--text-md) * var(--font-scale));
+    font-size: var(--text-md);
     font-weight: 400;
     white-space: nowrap;
   }
@@ -124,7 +130,7 @@
     padding: 10px 15px;
   }
   .shop-title {
-    font-size: calc(var(--text-md) * var(--font-scale));
+    font-size: var(--text-md);
     font-weight: 700;
     line-height: 20px;
     display: flex; align-items: center; gap: 4px;
@@ -137,11 +143,11 @@
   .status-open {
     display: inline-flex; align-items: center; gap: 4px;
     color: var(--primary); font-weight: 700;
-    font-size: calc(var(--text-xs) * var(--font-scale));
+    font-size: var(--text-xs);
   }
   .shop-hours {
     color: var(--gray-3);
-    font-size: calc(var(--text-xs) * var(--font-scale));
+    font-size: var(--text-xs);
     line-height: 12px;
   }
 
@@ -150,7 +156,7 @@
     border-bottom: 1px solid var(--gray-2);
     padding: 10px 15px;
     display: flex; align-items: center; gap: 5px;
-    font-size: calc(var(--text-sm) * var(--font-scale));
+    font-size: var(--text-sm);
     font-weight: 700;
   }
 
@@ -164,7 +170,7 @@
     border-radius: 10px;
     padding: 5px 10px;
     display: flex; align-items: center; gap: 10px;
-    font-size: calc(var(--text-sm) * var(--font-scale));
+    font-size: var(--text-sm);
     color: var(--black);
     line-height: 20px;
   }
@@ -175,20 +181,20 @@
     background: var(--white);
     border-bottom: 1px solid var(--gray-2);
     box-shadow: var(--shadow-card);
-    padding: 0 calc(20px * var(--font-scale));
+    padding: 0 20px;
     display: flex;
-    gap: calc(20px * var(--font-scale));
+    gap: 20px;
     overflow-x: auto;
     scrollbar-width: none;
   }
   .catalog::-webkit-scrollbar { display: none; }
   .catalog-item {
     background: none; border: 0;
-    padding: calc(15px * var(--font-scale)) 0;
+    padding: 15px 0;
     flex-shrink: 0;
     display: flex; align-items: center; justify-content: center;
     gap: 6px;
-    font-size: calc(var(--text-lg) * var(--font-scale));
+    font-size: var(--text-lg);
     color: var(--black);
     font-family: inherit;
     cursor: pointer;
@@ -231,7 +237,7 @@
     padding-bottom: 5px;
     border-bottom: 1px solid var(--black);
     font-weight: 700;
-    font-size: calc(20px * var(--font-scale));
+    font-size: var(--text-xl);
     line-height: 1.1;
   }
   .menu-item {
@@ -242,16 +248,16 @@
   .cat-section .menu-item:last-child { border-bottom: 0; }
   .menu-item .content { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
   .menu-item .name {
-    font-size: calc(var(--text-md) * var(--font-scale));
+    font-size: var(--text-md);
     line-height: 1.3;
   }
   .menu-item .price {
-    font-size: calc(var(--text-sm) * var(--font-scale));
+    font-size: var(--text-sm);
     font-weight: 700;
     line-height: 1.3;
   }
   .menu-item .desc {
-    font-size: calc(var(--text-xs) * var(--font-scale));
+    font-size: var(--text-xs);
     color: var(--gray-3);
     line-height: 1.4;
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
@@ -314,7 +320,7 @@
   .dialog-title {
     flex: 1;
     font-weight: 700;
-    font-size: calc(var(--text-lg) * var(--font-scale));
+    font-size: var(--text-lg);
     line-height: 25px;
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   }
@@ -344,7 +350,7 @@
     position: relative;
   }
   .field-label {
-    font-size: calc(var(--text-md) * var(--font-scale));
+    font-size: var(--text-md);
     color: var(--black);
     line-height: 20px;
   }
@@ -367,7 +373,7 @@
   .lang-select:hover, .lang-select.open { border-color: var(--primary); }
   .lang-select .value {
     flex: 1; text-align: left;
-    font-size: calc(var(--text-md) * var(--font-scale));
+    font-size: var(--text-md);
     opacity: .87;
   }
   .lang-select .chevron {
@@ -396,7 +402,7 @@
     display: flex; align-items: center; justify-content: center;
     cursor: pointer;
     font-family: inherit;
-    font-size: calc(var(--text-md) * var(--font-scale));
+    font-size: var(--text-md);
     color: var(--black);
     background: none;
     border: 0;
@@ -743,7 +749,6 @@
     { key: 'maicha',   cat: 'drink', price: 25,  emoji: '🧋', bg: 'linear-gradient(135deg, #C9A57E, #7B5432)' },
   ];
 
-  const FONT_SCALE = { S: 1.0, M: 1.15, L: 1.32 };
   const LANG_LABEL = { 'zh-TW': '繁體中文', 'en': 'English', 'ja': '日本語' };
 
   // ============ State ============
@@ -771,7 +776,8 @@
   }
 
   function applySize(size) {
-    document.documentElement.style.setProperty('--font-scale', FONT_SCALE[size]);
+    document.documentElement.classList.remove('size-M', 'size-L');
+    if (size !== 'S') document.documentElement.classList.add('size-' + size);
     document.querySelectorAll('.size-btn').forEach(btn => {
       btn.classList.toggle('selected', btn.getAttribute('data-size') === size);
     });
