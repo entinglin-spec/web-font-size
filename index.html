@@ -58,9 +58,16 @@
   }
   /* on any touch device OR viewport ≤ 640px, phone fills the screen edge-to-edge */
   @media (max-width: 640px), (hover: none) and (pointer: coarse) {
-    body { padding: 0; background: var(--white); }
+    body {
+      padding: 0;
+      background: var(--white);
+      /* stop flex centering — otherwise phone gets pushed to the vertical middle */
+      display: block;
+      min-height: 0;
+    }
     .phone {
       width: 100%;
+      max-width: none;
       border-radius: 0;
       height: 100vh;
       height: 100dvh; /* dynamic viewport height — avoids gap from browser toolbars */
