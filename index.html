@@ -27,12 +27,12 @@
 
     --font-body: "Open Sans", "Noto Sans TC", "PingFang TC", "Hiragino Sans", "Microsoft JhengHei", -apple-system, BlinkMacSystemFont, sans-serif;
   }
-  /* Font-size levels — S = default (12/14/16/18/20); each higher level = +2px per token */
-  :root.size-M {
-    --text-xs: 14px; --text-sm: 16px; --text-md: 18px; --text-lg: 20px; --text-xl: 22px;
-  }
-  :root.size-L {
+  /* Font-size levels — standard = default (12/14/16/18/20); 大 = +4px per token; 特大 = 大 × 1.2 */
+  :root.size-lg {
     --text-xs: 16px; --text-sm: 18px; --text-md: 20px; --text-lg: 22px; --text-xl: 24px;
+  }
+  :root.size-xl {
+    --text-xs: 19.2px; --text-sm: 21.6px; --text-md: 24px; --text-lg: 26.4px; --text-xl: 28.8px;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
@@ -500,7 +500,7 @@
             <ellipse cx="10" cy="10" rx="4" ry="8"/>
             <line x1="2" y1="10" x2="18" y2="10"/>
           </svg>
-          <span class="label" data-i18n="settings.title">語言與文字大小</span>
+          <span class="label" data-i18n="settings.title">語言 / 文字大小</span>
           <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="6 8 10 12 14 8"/>
           </svg>
@@ -562,7 +562,7 @@
       <!-- Dialog -->
       <div class="dialog" id="dialog" role="dialog" aria-modal="true" aria-labelledby="dialogTitle">
         <div class="dialog-header">
-          <div class="dialog-title" id="dialogTitle" data-i18n="settings.title">語言與文字大小</div>
+          <div class="dialog-title" id="dialogTitle" data-i18n="settings.title">語言 / 文字大小</div>
           <button class="close-btn" id="closeDialog" aria-label="close">
             <svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
               <line x1="5" y1="5" x2="17" y2="17"/>
@@ -588,14 +588,14 @@
           <div class="field">
             <label class="field-label" data-i18n="settings.fontSize">文字大小</label>
             <div class="size-buttons" id="sizeButtons">
-              <button class="size-btn" data-size="S">
-                <span class="glyph" data-i18n="size.small">小</span>
+              <button class="size-btn" data-size="std">
+                <span class="glyph" data-i18n="size.standard">標準</span>
               </button>
-              <button class="size-btn" data-size="M">
-                <span class="glyph" data-i18n="size.medium">中</span>
-              </button>
-              <button class="size-btn" data-size="L">
+              <button class="size-btn" data-size="lg">
                 <span class="glyph" data-i18n="size.large">大</span>
+              </button>
+              <button class="size-btn" data-size="xl">
+                <span class="glyph" data-i18n="size.xlarge">特大</span>
               </button>
             </div>
           </div>
@@ -613,12 +613,12 @@
   const I18N = {
     'zh-TW': {
       html: 'zh-TW',
-      'settings.title': '語言與文字大小',
+      'settings.title': '語言 / 文字大小',
       'settings.language': '語言',
       'settings.fontSize': '文字大小',
-      'size.small': '小',
-      'size.medium': '中',
+      'size.standard': '標準',
       'size.large': '大',
+      'size.xlarge': '特大',
       'shop.name': '阿嬤古早味滷肉飯 汐止店',
       'shop.open': '營業中',
       'service.takeout': '外帶',
@@ -651,12 +651,12 @@
     },
     'en': {
       html: 'en',
-      'settings.title': 'Language & Font Size',
+      'settings.title': 'Language / Font Size',
       'settings.language': 'Language',
       'settings.fontSize': 'Font Size',
-      'size.small': 'S',
-      'size.medium': 'M',
-      'size.large': 'L',
+      'size.standard': 'Standard',
+      'size.large': 'Large',
+      'size.xlarge': 'Extra Large',
       'shop.name': "A-Ma's Old-Style Braised Pork Rice — Xizhi",
       'shop.open': 'Open',
       'service.takeout': 'Take-out',
@@ -689,12 +689,12 @@
     },
     'ja': {
       html: 'ja',
-      'settings.title': '言語と文字サイズ',
+      'settings.title': '言語 / 文字サイズ',
       'settings.language': '言語',
       'settings.fontSize': '文字サイズ',
-      'size.small': '小',
-      'size.medium': '中',
+      'size.standard': '標準',
       'size.large': '大',
+      'size.xlarge': '特大',
       'shop.name': '阿嬤の懐かしい滷肉飯 汐止店',
       'shop.open': '営業中',
       'service.takeout': 'テイクアウト',
@@ -754,7 +754,7 @@
   // ============ State ============
   let state = {
     lang: 'zh-TW',
-    size: 'S',
+    size: 'std',
     dialogOpen: false,
     langMenuOpen: false,
   };
@@ -776,8 +776,8 @@
   }
 
   function applySize(size) {
-    document.documentElement.classList.remove('size-M', 'size-L');
-    if (size !== 'S') document.documentElement.classList.add('size-' + size);
+    document.documentElement.classList.remove('size-lg', 'size-xl');
+    if (size !== 'std') document.documentElement.classList.add('size-' + size);
     document.querySelectorAll('.size-btn').forEach(btn => {
       btn.classList.toggle('selected', btn.getAttribute('data-size') === size);
     });
